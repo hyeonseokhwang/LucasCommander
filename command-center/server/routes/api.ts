@@ -3,6 +3,10 @@ import fs from 'fs';
 import path from 'path';
 import { ptyManager } from '../services/pty-manager.js';
 import { config } from '../config.js';
+import { workerLifecycle } from '../services/worker-lifecycle.js';
+import { approvalQueue } from '../services/approval-queue.js';
+import { outputLogger } from '../services/output-logger.js';
+import { claudeUsageMonitor } from '../services/claude-usage-monitor.js';
 
 export const apiRouter = Router();
 
@@ -36,6 +40,18 @@ apiRouter.get('/health', (_req, res) => {
     activeSessions: active.length,
     uptime: process.uptime(),
   });
+});
+
+// Debug: check replay buffer sizes
+apiRouter.get('/debug/buffers', (_req, res) => {
+  const active = ptyManager.list();
+  const buffers = active.map(s => ({
+    id: s.id,
+    name: s.name,
+    bufferSize: outputLogger.getBuffer(s.id).length,
+    bufferPreview: outputLogger.getBuffer(s.id).slice(0, 200),
+  }));
+  res.json(buffers);
 });
 
 // List session configs
@@ -115,9 +131,34 @@ apiRouter.post('/sessions/:id/kill', (req, res) => {
 
 // Worker report → Commander prompt injection (file-based for Korean encoding safety)
 apiRouter.post('/report', (req, res) => {
-  const { worker, report, needsUserDecision } = req.body;
+  const { worker, report, needsUserDecision, type, payload } = req.body;
   if (!worker || !report) {
     res.status(400).json({ error: 'worker and report are required' });
+    return;
+  }
+
+  // Handle worker-request type from Commander
+  if (type === 'worker-request' && payload) {
+    const request = approvalQueue.addRequest({
+      type: 'create',
+      reason: report,
+      count: payload.count || 1,
+      missions: payload.missions || [],
+      targetProject: payload.targetProject,
+    });
+    res.json({ status: 'pending_approval', requestId: request.requestId });
+    return;
+  }
+
+  // Handle worker-cleanup type from Commander
+  if (type === 'worker-cleanup' && payload?.workerId) {
+    const request = approvalQueue.addRequest({
+      type: 'cleanup',
+      reason: report,
+      count: 1,
+      missions: [payload.workerId],
+    });
+    res.json({ status: 'pending_approval', requestId: request.requestId });
     return;
   }
 
@@ -221,6 +262,21 @@ apiRouter.get('/messages/:filename', (req, res) => {
   res.type('text/plain; charset=utf-8').send(content);
 });
 
+// Claude usage monitoring
+apiRouter.get('/claude-usage', (_req, res) => {
+  if (claudeUsageMonitor.latest) {
+    res.json(claudeUsageMonitor.latest);
+  } else {
+    res.json({ error: 'No usage data yet. Monitor may still be initializing.' });
+  }
+});
+
+// Force refresh Claude usage
+apiRouter.post('/claude-usage/refresh', async (_req, res) => {
+  await claudeUsageMonitor.poll();
+  res.json(claudeUsageMonitor.latest);
+});
+
 // Pending reports queue & history
 const pendingReports: any[] = [];
 const reportHistory: any[] = [];
@@ -291,4 +347,64 @@ apiRouter.post('/sessions', (req, res) => {
   configs.push(newConfig);
   fs.writeFileSync(config.sessionsFile, JSON.stringify(configs, null, 2));
   res.status(201).json(newConfig);
+});
+
+// ===== Dynamic Worker Management =====
+
+// Create a new dynamic worker
+apiRouter.post('/workers', async (req, res) => {
+  const { mission, targetProject, autoSpawn } = req.body;
+  try {
+    const result = await workerLifecycle.create({
+      mission,
+      targetProject,
+      autoSpawn: autoSpawn ?? true,
+      requestedBy: 'ui',
+    });
+    res.status(201).json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Delete a worker
+apiRouter.delete('/workers/:id', async (req, res) => {
+  const { id } = req.params;
+  const { archive } = req.body || {};
+  try {
+    await workerLifecycle.delete(id, { archive: archive ?? true });
+    res.json({ id, status: 'deleted' });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// List all workers with status
+apiRouter.get('/workers', (_req, res) => {
+  res.json(workerLifecycle.list());
+});
+
+// Get pending worker requests
+apiRouter.get('/workers/requests', (_req, res) => {
+  res.json(approvalQueue.getAll());
+});
+
+// Approve a worker request
+apiRouter.post('/workers/requests/:requestId/approve', async (req, res) => {
+  try {
+    const result = await approvalQueue.approve(req.params.requestId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Deny a worker request
+apiRouter.post('/workers/requests/:requestId/deny', async (req, res) => {
+  try {
+    const result = await approvalQueue.deny(req.params.requestId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
 });

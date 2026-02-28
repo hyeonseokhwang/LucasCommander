@@ -6,10 +6,12 @@ import path from 'path';
 import fs from 'fs';
 import { config } from './config.js';
 import { apiRouter } from './routes/api.js';
+import { workerStatusRouter } from './routes/worker-status.js';
 import { setupTerminalNamespace } from './socket/terminal-handler.js';
 import { setupMonitorNamespace } from './socket/monitor-handler.js';
 import { setupCoordinationNamespace } from './socket/coordination-handler.js';
 import { systemMonitor } from './services/system-monitor.js';
+import { claudeUsageMonitor } from './services/claude-usage-monitor.js';
 import { coordinationParser } from './services/coordination-parser.js';
 import { outputLogger } from './services/output-logger.js';
 import { sessionState } from './services/session-state.js';
@@ -26,6 +28,7 @@ const io = new SocketIOServer(httpServer, {
 app.use(cors());
 app.use(express.json());
 app.use('/api', apiRouter);
+app.use('/api/worker-status', workerStatusRouter);
 
 // Setup socket.io namespaces
 setupTerminalNamespace(io.of('/terminal'));
@@ -34,6 +37,7 @@ setupCoordinationNamespace(io.of('/coordination'));
 
 // Start background services
 systemMonitor.startPolling(config.monitorInterval);
+claudeUsageMonitor.startPolling(180_000); // 3 minutes
 coordinationParser.startWatching();
 
 // Serve frontend static files (production build)

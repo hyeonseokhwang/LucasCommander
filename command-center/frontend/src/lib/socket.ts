@@ -12,3 +12,12 @@ export function createTerminalSocket(): Socket {
     reconnectionDelayMax: 5000,
   });
 }
+
+export function createCoordinationSocket(): Socket {
+  return io(`${BASE_URL}/coordination`, {
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+  });
+}

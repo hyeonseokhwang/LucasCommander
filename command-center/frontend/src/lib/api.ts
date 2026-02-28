@@ -29,4 +29,16 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ worker, instruction }),
     }),
+
+  // Dynamic workers
+  createWorker: (opts: { mission?: string; targetProject?: string; autoSpawn?: boolean }) =>
+    request<any>('/workers', { method: 'POST', body: JSON.stringify(opts) }),
+  deleteWorker: (id: string) =>
+    request<any>(`/workers/${id}`, { method: 'DELETE', body: JSON.stringify({ archive: true }) }),
+  listWorkers: () => request<any[]>('/workers'),
+  workerRequests: () => request<any[]>('/workers/requests'),
+  approveRequest: (requestId: string) =>
+    request<any>(`/workers/requests/${requestId}/approve`, { method: 'POST' }),
+  denyRequest: (requestId: string) =>
+    request<any>(`/workers/requests/${requestId}/deny`, { method: 'POST' }),
 };

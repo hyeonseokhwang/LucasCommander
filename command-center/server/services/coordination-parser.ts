@@ -12,6 +12,12 @@ interface WorkerStatus {
   lastUpdated: string;
   tasks: WorkerTask[];
   requests: string[];
+  scope: string;
+  stack: string;
+  port: string;
+  completedSections: string[];
+  reportItems: string[];
+  statusSummary: string;
 }
 
 export interface CoordinationState {
@@ -20,6 +26,8 @@ export interface CoordinationState {
     sessionCount: number;
     phases: WorkerTask[];
     prohibitions: string[];
+    rawContent: string;
+    sessionTable: { name: string; role: string; status: string; code: string }[];
   };
   workers: WorkerStatus[];
   lastParsed: string;
@@ -67,7 +75,7 @@ class CoordinationParser {
     try {
       const files = fs.readdirSync(this.dir).filter(f => f.endsWith('.md'));
       const workers: WorkerStatus[] = [];
-      let masterData = { lastUpdated: '', sessionCount: 0, phases: [] as WorkerTask[], prohibitions: [] as string[] };
+      let masterData = { lastUpdated: '', sessionCount: 0, phases: [] as WorkerTask[], prohibitions: [] as string[], rawContent: '', sessionTable: [] as { name: string; role: string; status: string; code: string }[] };
 
       for (const file of files) {
         const content = fs.readFileSync(path.join(this.dir, file), 'utf-8');
@@ -90,7 +98,7 @@ class CoordinationParser {
     } catch (err) {
       console.error('[Coordination] Parse error:', err);
       return this.state || {
-        master: { lastUpdated: '', sessionCount: 0, phases: [], prohibitions: [] },
+        master: { lastUpdated: '', sessionCount: 0, phases: [], prohibitions: [], rawContent: '', sessionTable: [] },
         workers: [],
         lastParsed: new Date().toISOString(),
       };
@@ -110,23 +118,71 @@ class CoordinationParser {
     }
 
     // Extract last updated
-    const updateMatch = content.match(/마지막 업데이트:\s*(.+)/);
+    const updateMatch = content.match(/마지막 업데이트:\s*(.+)/) || content.match(/Last updated:\s*(.+)/);
     const lastUpdated = updateMatch ? updateMatch[1].trim() : '';
 
-    // Extract requests
+    // Extract scope (담당 범위)
+    const scopeMatch = content.match(/## 담당 범위\n([\s\S]*?)(?=\n---|\n## )/);
+    const scope = scopeMatch ? scopeMatch[1].replace(/^- /gm, '').trim().split('\n')[0] : '';
+
+    // Extract stack
+    const stackMatch = content.match(/스택:\s*(.+)/);
+    const stack = stackMatch ? stackMatch[1].trim() : '';
+
+    // Extract port
+    const portMatch = content.match(/\| HTTP \| ([^\|]+)/) || content.match(/\| API 서버 \| ([^\|]+)/);
+    const port = portMatch ? portMatch[1].trim() : '';
+
+    // Extract completed section titles
+    const completedSections: string[] = [];
+    const completedRegex = /### \d+\.\s+(.+)/g;
+    while ((match = completedRegex.exec(content)) !== null) {
+      completedSections.push(match[1].trim());
+    }
+
+    // Extract report items (보고)
+    const reportItems: string[] = [];
+    const reportSection = content.match(/### 보고\n([\s\S]*?)(?=\n### |\n---|\n## |$)/);
+    if (reportSection) {
+      const items = reportSection[1].match(/\d+\.\s+\*\*[^*]+\*\*[^\n]*/g);
+      if (items) reportItems.push(...items.map(l => l.replace(/^\d+\.\s*/, '').trim()));
+    }
+
+    // Extract requests (요청)
     const requestSection = content.match(/## 사령탑에[^\n]*\n([\s\S]*?)(?=\n## |\n---|\z)/);
     if (requestSection) {
       const numbered = requestSection[1].match(/\d+\.\s\*\*[^*]+\*\*/g);
       if (numbered) requests.push(...numbered.map(l => l.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '')));
     }
+    // Also try "### 요청" subsection
+    const reqSubSection = content.match(/### 요청[^\n]*\n([\s\S]*?)(?=\n### |\n---|\n## |$)/);
+    if (reqSubSection) {
+      const items = reqSubSection[1].match(/\d+\.\s+\*\*[^*]+\*\*[^\n]*/g);
+      if (items) {
+        for (const item of items) {
+          const cleaned = item.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '').trim();
+          if (!requests.includes(cleaned)) requests.push(cleaned);
+        }
+      }
+    }
 
-    return { filename, name, lastUpdated, tasks, requests };
+    // Status summary: derive from content
+    let statusSummary = '대기 중';
+    if (content.includes('대기 중')) statusSummary = '대기 중';
+    if (content.includes('진행중') || content.includes('진행 중')) statusSummary = '작업 중';
+    if (content.includes('블록') || content.includes('차단')) statusSummary = '블로커 있음';
+    // Check for explicit status line
+    const statusLine = content.match(/- \*\*(대기 중|작업 중|블로커)[^*]*\*\*/);
+    if (statusLine) statusSummary = statusLine[0].replace(/\*\*/g, '').replace(/^- /, '');
+
+    return { filename, name, lastUpdated, tasks, requests, scope, stack, port, completedSections, reportItems, statusSummary };
   }
 
   private parseMaster(content: string) {
     let lastUpdated = '';
     const phases: WorkerTask[] = [];
     const prohibitions: string[] = [];
+    const sessionTable: { name: string; role: string; status: string; code: string }[] = [];
 
     const updateMatch = content.match(/마지막 업데이트:\s*(.+)/);
     if (updateMatch) lastUpdated = updateMatch[1].trim();
@@ -149,11 +205,19 @@ class CoordinationParser {
       prohibitions.push(...lines.map(l => l.replace(/^\d+\.\s*/, '').trim()));
     }
 
-    // Count sessions from table
-    const sessionRows = content.match(/\| \*\*.*?\*\* \|/g);
-    const sessionCount = sessionRows ? sessionRows.length : 0;
+    // Parse session table rows
+    const tableRegex = /\| \*\*([^*]+)\*\* \|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|/g;
+    while ((match = tableRegex.exec(content)) !== null) {
+      sessionTable.push({
+        name: match[1].trim(),
+        role: match[2].trim(),
+        code: match[4].trim(),
+        status: match[5].trim(),
+      });
+    }
+    const sessionCount = sessionTable.length;
 
-    return { lastUpdated, sessionCount, phases, prohibitions };
+    return { lastUpdated, sessionCount, phases, prohibitions, rawContent: content, sessionTable };
   }
 
   getState(): CoordinationState | null {

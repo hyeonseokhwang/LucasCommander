@@ -1,0 +1,32 @@
+[
+  {
+    "label": "default (auto)",
+    "tok_s": 37.3,
+    "tokens": 56,
+    "load_s": 3.0
+  },
+  {
+    "label": "num_gpu=99 (all GPU)",
+    "tok_s": 81.0,
+    "tokens": 77,
+    "load_s": 3.0
+  },
+  {
+    "label": "num_gpu=50",
+    "tok_s": 84.6,
+    "tokens": 109,
+    "load_s": 3.0
+  },
+  {
+    "label": "num_gpu=40",
+    "tok_s": 15.9,
+    "tokens": 56,
+    "load_s": 3.3
+  },
+  {
+    "label": "num_gpu=30",
+    "tok_s": 11.2,
+    "tokens": 77,
+    "load_s": 3.5
+  }
+]

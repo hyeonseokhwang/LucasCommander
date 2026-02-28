@@ -1,0 +1,80 @@
+{
+  "deepseek-r1:14b": {
+    "model": "deepseek-r1:14b",
+    "results": [
+      {
+        "name": "한국어 이해력",
+        "speed": 37.1,
+        "tokens": 1027,
+        "total_time": 33.9,
+        "load_time": 3.7,
+        "passed": false,
+        "visible_chars": 2518,
+        "response_preview": "The economic development of South Korea can be effectively divided into several key eras, each characterized by distinct industrial focuses and government policies. Here's an organized overview:\n\n### 1960s: Foundations of Economic Growth\n- **Focus**: Heavy Industry\n- **Core Industries**: Steel, chem"
+      },
+      {
+        "name": "추론 능력",
+        "speed": 36.5,
+        "tokens": 423,
+        "total_time": 14.0,
+        "load_time": 0.1,
+        "passed": true,
+        "visible_chars": 1092,
+        "response_preview": "**Solution:**\n\nLet's solve each of the problems step by step.\n\n---\n\n### **Problem 1:**  \n*A farmer has 17 sheep. All but 9 die. How many sheep are left?*\n\n1. **Understanding the Problem:**  \n   The farmer initially has **17 sheep**.\n   \n2. **Interpreting \"All But 9\":**  \n   - \"All but 9\" means that "
+      },
+      {
+        "name": "코드 생성",
+        "speed": 36.2,
+        "tokens": 2000,
+        "total_time": 58.2,
+        "load_time": 0.1,
+        "passed": true,
+        "visible_chars": 2419,
+        "response_preview": "To solve this problem, we need to implement two separate functions: one for performing a binary search on a sorted list and another for finding the longest common subsequence (LCS) between two strings using dynamic programming.\n\n### Approach\n\n1. **Binary Search**:\n   - **Problem Analysis**: Binary s"
+      },
+      {
+        "name": "요약 능력",
+        "speed": 35.7,
+        "tokens": 221,
+        "total_time": 8.5,
+        "load_time": 0.1,
+        "passed": true,
+        "visible_chars": 327,
+        "response_preview": "- Machine learning is a subset of artificial intelligence that enables systems to learn from data.  \n- Deep learning uses neural networks with multiple layers to process complex patterns.  \n- Transformers revolutionized natural language processing (NLP) using attention mechanisms, leading to advance"
+      },
+      {
+        "name": "복잡 추론",
+        "speed": 35.9,
+        "tokens": 2000,
+        "total_time": 59.1,
+        "load_time": 0.1,
+        "passed": false,
+        "visible_chars": 0,
+        "response_preview": ""
+      },
+      {
+        "name": "한국어 리서치 분석",
+        "speed": 36.8,
+        "tokens": 1350,
+        "total_time": 39.8,
+        "load_time": 0.1,
+        "passed": true,
+        "visible_chars": 1443,
+        "response_preview": "### 1. 긍정적 측면\n(1) **기술 경쟁력 강화**: 삼성전자가 AI 반도체 분야에 대규모 투자를 하면, 엔비디아와의 경쟁에서 뒤처지지 않기 위해 기술력을 강화할 수 있다. 이는 차세대 AI 칩셋 개발能力을 극대화하고, 데이터센터, 인공지능, 머신러닝 분야에서 경쟁력을 확보하는 데 도움이 될 것이다.\n\n(2) **시장 선점 효과**: AI 반도체 시장은 빠르게 성장 중이며, 삼성전자의 대규모 투자는 이 시장을 선점할 기회를 제공한다. 특히, 엔비디아가 currently leading한 GPU 시장 외에도 자체적인 AI 칩셋을 "
+      }
+    ],
+    "avg_speed": 36.4,
+    "pass_count": 4,
+    "total_count": 6,
+    "gpu_before": {
+      "used_mb": 21152,
+      "total_mb": 24564,
+      "free_mb": 2991
+    },
+    "gpu_after": {
+      "used_mb": 21066,
+      "total_mb": 24564,
+      "free_mb": 3077
+    }
+  }
+}

@@ -51,8 +51,9 @@ class PtyManager {
     if (command) {
       setTimeout(() => {
         // --dangerously-skip-permissions: bypass all y/n prompts
+        // Note: do NOT use 'cls' — it wipes the xterm buffer and destroys replayed content
         const fullCommand = command === 'claude'
-          ? 'cls && claude --dangerously-skip-permissions'
+          ? 'claude --dangerously-skip-permissions'
           : command;
         ptyProcess.write(fullCommand + '\r');
       }, 1200);

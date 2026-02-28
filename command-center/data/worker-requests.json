@@ -1,0 +1,34 @@
+[
+  {
+    "type": "create",
+    "reason": "Need 1 worker for CSS refactoring",
+    "count": 1,
+    "missions": [
+      "Refactor TerminalGrid CSS"
+    ],
+    "targetProject": "command-center",
+    "requestId": "wr-1772283220214",
+    "status": "approved",
+    "requestedAt": "2026-02-28T12:53:40.214Z",
+    "resolvedAt": "2026-02-28T12:53:48.097Z",
+    "createdWorkers": [
+      "worker-5"
+    ]
+  },
+  {
+    "type": "create",
+    "reason": "Need worker-7 for research task: Korean Medicine Clinic research",
+    "count": 1,
+    "missions": [
+      "Research on Gwanjajae Korean Medicine Clinic - comprehensive investigation"
+    ],
+    "targetProject": "research",
+    "requestId": "wr-1772288681641",
+    "status": "approved",
+    "requestedAt": "2026-02-28T14:24:41.641Z",
+    "resolvedAt": "2026-02-28T14:25:34.065Z",
+    "createdWorkers": [
+      "worker-8"
+    ]
+  }
+]

@@ -38,5 +38,49 @@
     "command": "claude",
     "autoStart": false,
     "color": "#c084fc"
+  },
+  {
+    "id": "worker-5",
+    "name": "Worker-5",
+    "cwd": "G:\\Lucas-Initiative\\agents\\worker-5",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#fb923c",
+    "type": "dynamic",
+    "createdAt": "2026-02-28T12:57:57.135Z"
+  },
+  {
+    "id": "worker-6",
+    "name": "Worker-6",
+    "cwd": "G:\\Lucas-Initiative\\agents\\worker-6",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#f472b6",
+    "type": "dynamic",
+    "mission": "루카스 이니셔티브 홈페이지 작성",
+    "createdAt": "2026-02-28T13:51:09.006Z"
+  },
+  {
+    "id": "worker-7",
+    "name": "Worker-7",
+    "cwd": "G:\\Lucas-Initiative\\agents\\worker-7",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#2dd4bf",
+    "type": "dynamic",
+    "mission": "대화창",
+    "createdAt": "2026-02-28T14:06:00.771Z"
+  },
+  {
+    "id": "worker-8",
+    "name": "Worker-8",
+    "cwd": "G:\\Lucas-Initiative\\agents\\worker-8",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#a78bfa",
+    "type": "dynamic",
+    "mission": "Research on Gwanjajae Korean Medicine Clinic - comprehensive investigation",
+    "targetProject": "research",
+    "createdAt": "2026-02-28T14:25:33.979Z"
   }
 ]

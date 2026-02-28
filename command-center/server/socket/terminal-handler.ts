@@ -31,6 +31,7 @@ export function setupTerminalNamespace(nsp: Namespace) {
       // Send buffered output BEFORE registering live listener
       if (requestReplay) {
         const buffered = outputLogger.getBuffer(sessionId);
+        console.log(`[Terminal] Replay for "${sessionId}": buffer=${buffered.length} bytes`);
         if (buffered.length > 0) {
           const CHUNK = 64 * 1024;
           if (buffered.length <= CHUNK) {
@@ -40,6 +41,7 @@ export function setupTerminalNamespace(nsp: Namespace) {
               socket.emit('replay', { sessionId, data: buffered.slice(i, i + CHUNK) });
             }
           }
+          console.log(`[Terminal] Sent replay for "${sessionId}": ${buffered.length} bytes in ${Math.ceil(buffered.length / CHUNK)} chunk(s)`);
         }
       }
 

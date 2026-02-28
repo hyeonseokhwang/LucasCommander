@@ -45,6 +45,45 @@ curl -d '{"worker":"worker-1","instruction":"한글 지시"}' ...
 - 워커 활동 기록: 각 워커 폴더 내 `activity.md`
 - 세션이 끊겨도 `activity.md`로 컨텍스트 복원
 
+## 동적 워커 관리
+
+필요 시 워커를 동적으로 생성/정리할 수 있다. **Lucas의 승인이 필요하다.**
+
+### 워커 생성 요청
+태스크가 병렬화 가능하면 워커를 요청한다:
+```bash
+printf '{"worker":"commander","type":"worker-request","report":"Need workers for parallel execution","payload":{"count":2,"missions":["Task 1 description","Task 2 description"],"targetProject":"command-center"}}' > /tmp/_wreq.json
+curl -s -X POST http://localhost:9000/api/report -H "Content-Type: application/json; charset=utf-8" --data-binary @/tmp/_wreq.json
+```
+
+Lucas가 승인하면 `[WORKER REQUEST APPROVED] Workers created: worker-5, worker-6` 알림이 온다.
+
+### 워커 정리 요청
+워커가 작업 완료 후 정리가 필요하면:
+```bash
+printf '{"worker":"commander","type":"worker-cleanup","report":"Worker worker-5 task complete","payload":{"workerId":"worker-5"}}' > /tmp/_cleanup.json
+curl -s -X POST http://localhost:9000/api/report -H "Content-Type: application/json; charset=utf-8" --data-binary @/tmp/_cleanup.json
+```
+
+### 워커 현황 확인
+```bash
+curl -s http://localhost:9000/api/workers | cat
+```
+
+### 태스크 분할 가이드라인
+- 각 서브태스크는 독립적이어야 (명확한 입력/출력/완료 기준)
+- 워커별로 수정할 파일/디렉토리 범위를 명시
+- 필요한 컨텍스트 (아키텍처 결정, 컨벤션)를 포함
+- 충돌 방지: 같은 파일을 두 워커가 수정하지 않도록
+
+### 작업 대상 프로젝트
+| 프로젝트 | 경로 | 포트 | 설명 |
+|----------|------|------|------|
+| Dashboard | G:\LucasDashboard\ | :7777 | AI Dashboard + Research |
+| Scheduler | G:\Lucas-Initiative\scheduler\ | :7778 | Scheduler + Voice |
+| Command Center | G:\Lucas-Initiative\command-center\ | :9000 | 오케스트레이션 플랫폼 |
+| Benchmarker | G:\Lucas-Initiative\Secretary\ | - | LLM 벤치마킹 |
+
 ## 금지
 - 워커 폴더의 코드를 직접 수정하지 않는다
 - 담당 범위 밖의 코드를 건드리지 않는다

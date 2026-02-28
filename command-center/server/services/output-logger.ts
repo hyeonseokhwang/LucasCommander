@@ -41,9 +41,23 @@ class OutputLogger {
   }
 
   startSession(sessionId: string): void {
-    // Ring buffer
+    // Ring buffer — pre-fill from log file if available (survives server restart)
     if (!this.buffers.has(sessionId)) {
-      this.buffers.set(sessionId, new RingBuffer(config.ringBufferMaxBytes));
+      const buf = new RingBuffer(config.ringBufferMaxBytes);
+      const logPath = path.join(config.logsDir, `${sessionId}.log`);
+      if (fs.existsSync(logPath)) {
+        try {
+          const stats = fs.statSync(logPath);
+          const readSize = Math.min(stats.size, config.ringBufferMaxBytes);
+          const fd = fs.openSync(logPath, 'r');
+          const buffer = Buffer.alloc(readSize);
+          fs.readSync(fd, buffer, 0, readSize, Math.max(0, stats.size - readSize));
+          fs.closeSync(fd);
+          buf.push(buffer.toString('utf-8'));
+          console.log(`[OutputLogger] Pre-filled buffer for "${sessionId}" from log (${readSize} bytes)`);
+        } catch { /* ignore pre-fill errors */ }
+      }
+      this.buffers.set(sessionId, buf);
     }
 
     // Log file — rotate if > 50MB

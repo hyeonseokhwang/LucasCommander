@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "savedAt": "2026-02-28T14:25:35.199Z",
+  "sessions": [
+    {
+      "id": "commander",
+      "name": "Commander",
+      "cwd": "G:\\Lucas-Initiative\\agents\\commander",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T14:25:34.699Z",
+      "status": "running"
+    },
+    {
+      "id": "worker-1",
+      "name": "Worker-1",
+      "cwd": "G:\\Lucas-Initiative\\agents\\worker-1",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T14:25:34.770Z",
+      "status": "running"
+    },
+    {
+      "id": "worker-2",
+      "name": "Worker-2",
+      "cwd": "G:\\Lucas-Initiative\\agents\\worker-2",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T14:25:34.838Z",
+      "status": "running"
+    },
+    {
+      "id": "worker-3",
+      "name": "Worker-3",
+      "cwd": "G:\\Lucas-Initiative\\agents\\worker-3",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T14:25:34.906Z",
+      "status": "running"
+    },
+    {
+      "id": "worker-4",
+      "name": "Worker-4",
+      "cwd": "G:\\Lucas-Initiative\\agents\\worker-4",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T14:25:34.975Z",
+      "status": "running"
+    },
+    {
+      "id": "worker-5",
+      "name": "Worker-5",
+      "cwd": "G:\\Lucas-Initiative\\agents\\worker-5",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T14:25:35.046Z",
+      "status": "running"
+    },
+    {
+      "id": "worker-6",
+      "name": "Worker-6",
+      "cwd": "G:\\Lucas-Initiative\\agents\\worker-6",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T14:25:35.114Z",
+      "status": "running"
+    },
+    {
+      "id": "worker-7",
+      "name": "Worker-7",
+      "cwd": "G:\\Lucas-Initiative\\agents\\worker-7",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T14:25:35.187Z",
+      "status": "running"
+    }
+  ]
+}

@@ -3,3 +3,6 @@ dist/
 .env
 *.log
 /tmp/
+tsconfig.tsbuildinfo
+*_report_tmp.json
+tmp_report*.json

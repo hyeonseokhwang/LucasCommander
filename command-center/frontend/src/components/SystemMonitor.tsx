@@ -1,7 +1,27 @@
 import { useSystemMonitor } from '../hooks/useSystemMonitor';
+import { useClaudeUsage } from '../hooks/useClaudeUsage';
+
+function formatResetTime(resetsAt: string): string {
+  if (!resetsAt) return '';
+  const reset = new Date(resetsAt);
+  const now = new Date();
+  const diffMs = reset.getTime() - now.getTime();
+  if (diffMs <= 0) return 'resetting...';
+  const hours = Math.floor(diffMs / 3_600_000);
+  const mins = Math.floor((diffMs % 3_600_000) / 60_000);
+  if (hours > 0) return `${hours}h ${mins}m`;
+  return `${mins}m`;
+}
+
+function usageBarColor(utilization: number): string {
+  if (utilization >= 80) return 'bg-red-500';
+  if (utilization >= 50) return 'bg-amber-500';
+  return 'bg-emerald-500';
+}
 
 export function SystemMonitor() {
   const metrics = useSystemMonitor();
+  const claudeUsage = useClaudeUsage();
 
   if (!metrics) {
     return (
@@ -52,6 +72,57 @@ export function SystemMonitor() {
           </div>
         )}
       </div>
+
+      {/* Claude Usage */}
+      {claudeUsage && !claudeUsage.error && (
+        <>
+          <div className="border-t border-slate-800 my-3" />
+          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            Claude Usage
+          </h2>
+          <div className="space-y-2">
+            <MetricBar
+              label="5h Window"
+              detail={`${claudeUsage.fiveHour.utilization}% | ${formatResetTime(claudeUsage.fiveHour.resetsAt)}`}
+              percent={claudeUsage.fiveHour.utilization}
+              color={usageBarColor(claudeUsage.fiveHour.utilization)}
+            />
+            <MetricBar
+              label="7d Window"
+              detail={`${claudeUsage.sevenDay.utilization}% | ${formatResetTime(claudeUsage.sevenDay.resetsAt)}`}
+              percent={claudeUsage.sevenDay.utilization}
+              color={usageBarColor(claudeUsage.sevenDay.utilization)}
+            />
+            {claudeUsage.sevenDayOpus && (
+              <MetricBar
+                label="7d Opus"
+                detail={`${claudeUsage.sevenDayOpus.utilization}%`}
+                percent={claudeUsage.sevenDayOpus.utilization}
+                color={usageBarColor(claudeUsage.sevenDayOpus.utilization)}
+              />
+            )}
+            {claudeUsage.sevenDaySonnet && claudeUsage.sevenDaySonnet.utilization > 0 && (
+              <MetricBar
+                label="7d Sonnet"
+                detail={`${claudeUsage.sevenDaySonnet.utilization}%`}
+                percent={claudeUsage.sevenDaySonnet.utilization}
+                color={usageBarColor(claudeUsage.sevenDaySonnet.utilization)}
+              />
+            )}
+            <div className="text-[10px] text-slate-500">
+              {claudeUsage.subscriptionType} | {claudeUsage.rateLimitTier.replace('default_claude_', '')}
+            </div>
+          </div>
+        </>
+      )}
+      {claudeUsage?.error && (
+        <>
+          <div className="border-t border-slate-800 my-3" />
+          <div className="text-[10px] text-red-400">
+            Claude Usage: {claudeUsage.error}
+          </div>
+        </>
+      )}
     </div>
   );
 }
