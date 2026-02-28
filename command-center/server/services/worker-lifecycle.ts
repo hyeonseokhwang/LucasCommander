@@ -169,32 +169,50 @@ class WorkerLifecycle {
     const idx = configs.findIndex(c => c.id === id);
     if (idx === -1) throw new Error(`Worker "${id}" not found`);
 
-    // Kill if running
+    // Kill if running — wait for process to fully release file locks (Windows)
     if (ptyManager.isRunning(id)) {
       ptyManager.kill(id);
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     const workerConfig = configs[idx];
     const agentDir = workerConfig.cwd;
 
-    // Remove from sessions.json
+    // Remove from sessions.json first (always succeeds)
     configs.splice(idx, 1);
     this.saveConfigs(configs);
 
-    // Archive or delete agent directory
-    if (options.archive && fs.existsSync(agentDir)) {
-      const archiveDir = config.agentsArchiveDir;
-      if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
-      const archiveDest = path.join(archiveDir, `${id}-${Date.now()}`);
-      fs.renameSync(agentDir, archiveDest);
-      console.log(`[WorkerLifecycle] Archived ${id} to ${archiveDest}`);
-    } else if (fs.existsSync(agentDir)) {
-      fs.rmSync(agentDir, { recursive: true, force: true });
+    // Archive or delete agent directory (retry on EBUSY for Windows file locks)
+    const moveOrDelete = async () => {
+      if (options.archive && fs.existsSync(agentDir)) {
+        const archiveDir = config.agentsArchiveDir;
+        if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
+        const archiveDest = path.join(archiveDir, `${id}-${Date.now()}`);
+        fs.renameSync(agentDir, archiveDest);
+        console.log(`[WorkerLifecycle] Archived ${id} to ${archiveDest}`);
+      } else if (fs.existsSync(agentDir)) {
+        fs.rmSync(agentDir, { recursive: true, force: true });
+      }
+    };
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await moveOrDelete();
+        break;
+      } catch (err: any) {
+        if (err.code === 'EBUSY' && attempt < 2) {
+          console.log(`[WorkerLifecycle] ${id} directory busy, retrying in ${(attempt + 1) * 500}ms...`);
+          await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 500));
+        } else {
+          console.error(`[WorkerLifecycle] Failed to archive ${id}: ${err.message} (will clean up later)`);
+          break; // Session already removed from config — directory cleanup can happen later
+        }
+      }
     }
 
     // Remove coordination file
     const coordFile = path.join(config.coordinationDir, `${id}.md`);
-    if (fs.existsSync(coordFile)) fs.unlinkSync(coordFile);
+    try { if (fs.existsSync(coordFile)) fs.unlinkSync(coordFile); } catch { /* ignore */ }
 
     console.log(`[WorkerLifecycle] Deleted ${id}`);
   }

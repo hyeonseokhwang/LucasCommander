@@ -3,10 +3,13 @@ import { ptyManager } from '../services/pty-manager.js';
 import { outputLogger } from '../services/output-logger.js';
 
 export function setupTerminalNamespace(nsp: Namespace) {
+  // Shared: one PTY output/exit listener per session, ref-counted by attached sockets
+  const ptyListeners = new Map<string, { dispose: () => void; count: number }>();
+
   nsp.on('connection', (socket: Socket) => {
     console.log(`[Terminal] Client connected: ${socket.id}`);
 
-    const cleanups: Array<{ dispose: () => void }> = [];
+    const attachedSessions = new Set<string>();
 
     socket.on('attach', (payload: string | { sessionId: string; requestReplay?: boolean; cols?: number; rows?: number }) => {
       const sessionId = typeof payload === 'string' ? payload : payload.sessionId;
@@ -21,6 +24,7 @@ export function setupTerminalNamespace(nsp: Namespace) {
       }
 
       socket.join(`term:${sessionId}`);
+      attachedSessions.add(sessionId);
       console.log(`[Terminal] ${socket.id} attached to session "${sessionId}" (replay: ${requestReplay})`);
 
       // Resize PTY to match client terminal before replay
@@ -45,18 +49,27 @@ export function setupTerminalNamespace(nsp: Namespace) {
         }
       }
 
-      // Pipe PTY output -> browser (live, going forward)
-      const onData = session.pty.onData((data: string) => {
-        nsp.to(`term:${sessionId}`).emit('output', { sessionId, data });
-      });
-      cleanups.push(onData);
+      // Register ONE shared PTY listener per session (ref-counted)
+      const existing = ptyListeners.get(sessionId);
+      if (existing) {
+        existing.count++;
+        console.log(`[Terminal] Reusing PTY listener for "${sessionId}" (refCount: ${existing.count})`);
+      } else {
+        const onData = session.pty.onData((data: string) => {
+          nsp.to(`term:${sessionId}`).emit('output', { sessionId, data });
+        });
 
-      // Pipe PTY exit -> browser
-      const onExit = session.pty.onExit(({ exitCode }) => {
-        nsp.to(`term:${sessionId}`).emit('exit', { sessionId, exitCode });
-        console.log(`[Terminal] Session "${sessionId}" exited with code ${exitCode}`);
-      });
-      cleanups.push(onExit);
+        const onExit = session.pty.onExit(({ exitCode }) => {
+          nsp.to(`term:${sessionId}`).emit('exit', { sessionId, exitCode });
+          console.log(`[Terminal] Session "${sessionId}" exited with code ${exitCode}`);
+        });
+
+        ptyListeners.set(sessionId, {
+          dispose: () => { onData.dispose(); onExit.dispose(); },
+          count: 1,
+        });
+        console.log(`[Terminal] Registered new PTY listener for "${sessionId}"`);
+      }
     });
 
     // Client sends keyboard input
@@ -89,7 +102,18 @@ export function setupTerminalNamespace(nsp: Namespace) {
 
     socket.on('disconnect', () => {
       console.log(`[Terminal] Client disconnected: ${socket.id}`);
-      cleanups.forEach(c => c.dispose());
+      // Decrement ref counts and clean up shared listeners when last client leaves
+      for (const sid of attachedSessions) {
+        const entry = ptyListeners.get(sid);
+        if (entry) {
+          entry.count--;
+          if (entry.count <= 0) {
+            entry.dispose();
+            ptyListeners.delete(sid);
+            console.log(`[Terminal] Disposed PTY listener for "${sid}" (no more clients)`);
+          }
+        }
+      }
     });
   });
 }

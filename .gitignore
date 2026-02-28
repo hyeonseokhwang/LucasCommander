@@ -6,3 +6,10 @@ dist/
 tsconfig.tsbuildinfo
 *_report_tmp.json
 tmp_report*.json
+
+# Runtime state (changes per session, not code)
+command-center/sessions.json
+command-center/data/runtime-state.json
+command-center/data/worker-requests.json
+command-center/data/task-queue.json
+command-center/data/policy.yaml

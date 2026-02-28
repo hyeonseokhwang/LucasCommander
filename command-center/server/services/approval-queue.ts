@@ -69,17 +69,56 @@ class ApprovalQueue {
     if (!req) throw new Error(`Request "${requestId}" not found`);
     if (req.status !== 'pending') throw new Error(`Request already ${req.status}`);
 
+    if (req.type === 'cleanup') {
+      // Cleanup: delete/archive workers listed in missions
+      const deletedWorkers: string[] = [];
+      for (const workerId of req.missions) {
+        try {
+          await workerLifecycle.delete(workerId, { archive: true });
+          deletedWorkers.push(workerId);
+        } catch (err: any) {
+          console.error(`[ApprovalQueue] Failed to delete ${workerId}: ${err.message}`);
+        }
+      }
+
+      req.status = 'approved';
+      req.resolvedAt = new Date().toISOString();
+      req.createdWorkers = deletedWorkers; // reuse field to track affected workers
+      this.save();
+
+      // Notify Commander via PTY
+      const commanderId = 'commander';
+      if (ptyManager.isRunning(commanderId)) {
+        const msg = `[WORKER CLEANUP APPROVED] Workers deleted: ${deletedWorkers.join(', ')}.`;
+        ptyManager.write(commanderId, msg);
+        setTimeout(() => ptyManager.write(commanderId, '\r'), 50);
+      }
+
+      // Push to frontend
+      if (this.coordinationNsp) {
+        this.coordinationNsp.emit('worker-request-resolved', req);
+      }
+
+      console.log(`[ApprovalQueue] Approved cleanup ${requestId}: deleted ${deletedWorkers.join(', ')}`);
+      return req;
+    }
+
+    // Create: spawn new workers (graceful partial — don't throw on individual failure)
     const createdWorkers: string[] = [];
 
     for (let i = 0; i < req.count; i++) {
       const mission = req.missions[i] || undefined;
-      const result = await workerLifecycle.create({
-        mission,
-        targetProject: req.targetProject,
-        autoSpawn: true,
-        requestedBy: 'commander',
-      });
-      createdWorkers.push(result.id);
+      try {
+        const result = await workerLifecycle.create({
+          mission,
+          targetProject: req.targetProject,
+          autoSpawn: true,
+          requestedBy: 'commander',
+        });
+        createdWorkers.push(result.id);
+      } catch (err: any) {
+        console.error(`[ApprovalQueue] Failed to create worker ${i + 1}/${req.count}: ${err.message}`);
+      }
     }
 
     req.status = 'approved';

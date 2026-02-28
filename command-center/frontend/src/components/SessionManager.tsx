@@ -29,7 +29,7 @@ export function SessionManager({ activeSessions, onSessionSpawned, onSessionKill
 
   useEffect(() => {
     fetchConfigs();
-  }, [fetchConfigs]);
+  }, [fetchConfigs, activeSessions]);
 
   const handleSpawn = async (config: SessionConfig) => {
     setLoading(config.id);

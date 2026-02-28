@@ -6,6 +6,7 @@ import { CoordinationView } from './components/CoordinationView';
 import { ReportLog } from './components/ReportLog';
 import { ApprovalBanner } from './components/ApprovalBanner';
 import { TerminalPanel } from './components/TerminalPanel';
+import { TerminalTabs } from './components/TerminalTabs';
 import { WorkerStatusDashboard } from './components/WorkerStatusDashboard';
 import { InstructionPanel } from './components/InstructionPanel';
 import { ReportTimeline } from './components/ReportTimeline';
@@ -37,7 +38,7 @@ function PopoutView({ sessionId, name, color }: { sessionId: string; name: strin
   );
 }
 
-type ViewMode = 'terminals' | 'dashboard';
+type ViewMode = 'terminals' | 'tabs' | 'dashboard';
 
 export default function App() {
   // Check for popout mode
@@ -117,6 +118,16 @@ function MainApp() {
             Terminals
           </button>
           <button
+            onClick={() => setViewMode('tabs')}
+            className={`text-xs px-3 py-1.5 rounded-md transition-colors ${
+              viewMode === 'tabs'
+                ? 'bg-emerald-600/80 text-white font-medium'
+                : 'text-slate-400 hover:text-slate-300'
+            }`}
+          >
+            Fullscreen
+          </button>
+          <button
             onClick={() => setViewMode('dashboard')}
             className={`text-xs px-3 py-1.5 rounded-md transition-colors ${
               viewMode === 'dashboard'
@@ -163,6 +174,11 @@ function MainApp() {
         {/* Main Content Area */}
         {viewMode === 'terminals' ? (
           <TerminalGrid
+            sessions={activeSessions}
+            onClose={handleClose}
+          />
+        ) : viewMode === 'tabs' ? (
+          <TerminalTabs
             sessions={activeSessions}
             onClose={handleClose}
           />

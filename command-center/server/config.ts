@@ -19,7 +19,7 @@ export const config = {
   ringBufferMaxBytes: 256 * 1024, // 256KB per session
 
   // Worker pool
-  maxWorkers: 8,
+  maxWorkers: 12,
   agentsDir: 'G:\\Lucas-Initiative\\agents',
   agentsArchiveDir: 'G:\\Lucas-Initiative\\agents\\_archive',
   workerRequestsFile: path.join(__dirname, '..', 'data', 'worker-requests.json'),

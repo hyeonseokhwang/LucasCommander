@@ -7,6 +7,9 @@ import fs from 'fs';
 import { config } from './config.js';
 import { apiRouter } from './routes/api.js';
 import { workerStatusRouter } from './routes/worker-status.js';
+import { nightCommanderRouter } from './routes/night-commander.js';
+import { tasksRouter } from './routes/tasks.js';
+import { policyRouter } from './routes/policy.js';
 import { setupTerminalNamespace } from './socket/terminal-handler.js';
 import { setupMonitorNamespace } from './socket/monitor-handler.js';
 import { setupCoordinationNamespace } from './socket/coordination-handler.js';
@@ -16,6 +19,7 @@ import { coordinationParser } from './services/coordination-parser.js';
 import { outputLogger } from './services/output-logger.js';
 import { sessionState } from './services/session-state.js';
 import { ptyManager } from './services/pty-manager.js';
+import { telegramNotifier } from './services/telegram-notifier.js';
 
 const app = express();
 const httpServer = createServer(app);

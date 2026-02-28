@@ -137,5 +137,16 @@ export function useTerminal({ sessionId, containerRef, fontSize = 14 }: UseTermi
     setTimeout(() => simulateInput('\r'), 50);
   }, [simulateInput]);
 
-  return { connected, sendApprove, sendReject, sendPrompt, termRef };
+  const refit = useCallback(() => {
+    const fitAddon = fitAddonRef.current;
+    const socket = socketRef.current;
+    const term = termRef.current;
+    if (!fitAddon || !term) return;
+    fitAddon.fit();
+    if (socket?.connected) {
+      socket.emit('resize', { sessionId, cols: term.cols, rows: term.rows });
+    }
+  }, [sessionId]);
+
+  return { connected, sendApprove, sendReject, sendPrompt, termRef, refit };
 }

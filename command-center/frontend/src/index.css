@@ -19,6 +19,15 @@ body {
   padding: 4px;
 }
 
+/* Tab transition for fullscreen terminal tabs */
+.tab-panel-enter {
+  opacity: 0;
+}
+.tab-panel-enter-active {
+  opacity: 1;
+  transition: opacity 100ms ease-in;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
