@@ -1,11 +1,10 @@
 import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { ptyManager } from '../services/pty-manager.js';
+import { ptyClient } from '../services/pty-client.js';
 import { config } from '../config.js';
 import { workerLifecycle } from '../services/worker-lifecycle.js';
 import { approvalQueue } from '../services/approval-queue.js';
-import { outputLogger } from '../services/output-logger.js';
 import { claudeUsageMonitor } from '../services/claude-usage-monitor.js';
 
 export const apiRouter = Router();
@@ -34,7 +33,7 @@ function loadSessionConfigs(): SessionConfig[] {
 
 // Health check
 apiRouter.get('/health', (_req, res) => {
-  const active = ptyManager.list();
+  const active = ptyClient.list();
   res.json({
     status: 'ok',
     activeSessions: active.length,
@@ -43,21 +42,25 @@ apiRouter.get('/health', (_req, res) => {
 });
 
 // Debug: check replay buffer sizes
-apiRouter.get('/debug/buffers', (_req, res) => {
-  const active = ptyManager.list();
-  const buffers = active.map(s => ({
-    id: s.id,
-    name: s.name,
-    bufferSize: outputLogger.getBuffer(s.id).length,
-    bufferPreview: outputLogger.getBuffer(s.id).slice(0, 200),
-  }));
+apiRouter.get('/debug/buffers', async (_req, res) => {
+  const active = ptyClient.list();
+  const buffers = [];
+  for (const s of active) {
+    const buf = await ptyClient.getBuffer(s.id);
+    buffers.push({
+      id: s.id,
+      name: s.name,
+      bufferSize: buf.length,
+      bufferPreview: buf.slice(0, 200),
+    });
+  }
   res.json(buffers);
 });
 
 // List session configs
 apiRouter.get('/sessions', (_req, res) => {
   const configs = loadSessionConfigs();
-  const active = ptyManager.list();
+  const active = ptyClient.list();
   const activeIds = new Set(active.map(s => s.id));
 
   const sessions = configs.map(c => ({
@@ -71,11 +74,11 @@ apiRouter.get('/sessions', (_req, res) => {
 
 // List active sessions
 apiRouter.get('/sessions/active', (_req, res) => {
-  res.json(ptyManager.list());
+  res.json(ptyClient.list());
 });
 
 // Spawn a session
-apiRouter.post('/sessions/:id/spawn', (req, res) => {
+apiRouter.post('/sessions/:id/spawn', async (req, res) => {
   const { id } = req.params;
   const configs = loadSessionConfigs();
   const sessionConfig = configs.find(c => c.id === id);
@@ -85,7 +88,7 @@ apiRouter.post('/sessions/:id/spawn', (req, res) => {
     return;
   }
 
-  if (ptyManager.isRunning(id)) {
+  if (ptyClient.isRunning(id)) {
     res.status(409).json({ error: `Session "${id}" is already running` });
     return;
   }
@@ -97,7 +100,7 @@ apiRouter.post('/sessions/:id/spawn', (req, res) => {
   }
 
   try {
-    const session = ptyManager.spawn(
+    const session = await ptyClient.spawn(
       id,
       sessionConfig.name,
       sessionConfig.cwd,
@@ -117,16 +120,20 @@ apiRouter.post('/sessions/:id/spawn', (req, res) => {
 });
 
 // Kill a session
-apiRouter.post('/sessions/:id/kill', (req, res) => {
+apiRouter.post('/sessions/:id/kill', async (req, res) => {
   const { id } = req.params;
 
-  if (!ptyManager.isRunning(id)) {
+  if (!ptyClient.isRunning(id)) {
     res.status(404).json({ error: `Session "${id}" is not running` });
     return;
   }
 
-  ptyManager.kill(id);
-  res.json({ id, status: 'killed' });
+  try {
+    await ptyClient.kill(id);
+    res.json({ id, status: 'killed' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Worker report → Commander prompt injection (file-based for Korean encoding safety)
@@ -177,7 +184,7 @@ apiRouter.post('/report', (req, res) => {
 
   // Find commander session
   const commanderId = 'commander';
-  if (!ptyManager.isRunning(commanderId)) {
+  if (!ptyClient.isRunning(commanderId)) {
     const reportLog = {
       timestamp: new Date().toISOString(),
       worker,
@@ -195,8 +202,8 @@ apiRouter.post('/report', (req, res) => {
   const prefix = needsUserDecision ? '[ALERT - USER DECISION NEEDED]' : '[WORKER REPORT]';
   const inboxRelPath = `.coordination/inbox/${msgFile}`;
   const notification = `${prefix} from ${worker}. Read file: ${inboxRelPath}`;
-  ptyManager.write(commanderId, notification);
-  setTimeout(() => ptyManager.write(commanderId, '\r'), 50);
+  ptyClient.write(commanderId, notification);
+  setTimeout(() => ptyClient.write(commanderId, '\r'), 50);
 
   logReport(worker, report, needsUserDecision, msgFile);
 
@@ -211,7 +218,7 @@ apiRouter.post('/instruct', (req, res) => {
     return;
   }
 
-  if (!ptyManager.isRunning(worker)) {
+  if (!ptyClient.isRunning(worker)) {
     res.status(404).json({ error: `Worker "${worker}" is not running` });
     return;
   }
@@ -232,8 +239,8 @@ apiRouter.post('/instruct', (req, res) => {
   // Inject ASCII-only notification into worker PTY (no Korean through PTY)
   const inboxRelPath = `.coordination/inbox/${msgFile}`;
   const notification = `[COMMANDER INSTRUCTION] Read file: ${inboxRelPath}`;
-  ptyManager.write(worker, notification);
-  setTimeout(() => ptyManager.write(worker, '\r'), 50);
+  ptyClient.write(worker, notification);
+  setTimeout(() => ptyClient.write(worker, '\r'), 50);
 
   logInstruction(worker, instruction, msgFile);
 

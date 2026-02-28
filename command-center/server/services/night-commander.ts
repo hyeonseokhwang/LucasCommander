@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import http from 'http';
 import { config } from '../config.js';
-import { ptyManager } from './pty-manager.js';
+import { ptyClient } from './pty-client.js';
 import { getIdleWorkers, getPendingTasks, assignTaskInternal } from '../routes/tasks.js';
 
 import https from 'https';
@@ -343,10 +343,10 @@ function executeInstruction(workerId: string, instruction: string, source: strin
     fs.writeFileSync(msgPath, fileContent, 'utf-8');
 
     // Inject ASCII notification into worker PTY
-    if (ptyManager.isRunning(workerId)) {
+    if (ptyClient.isRunning(workerId)) {
       const notification = `[COMMANDER INSTRUCTION] Read file: .coordination/inbox/${msgFile}`;
-      ptyManager.write(workerId, notification);
-      setTimeout(() => ptyManager.write(workerId, '\r'), 50);
+      ptyClient.write(workerId, notification);
+      setTimeout(() => ptyClient.write(workerId, '\r'), 50);
       log('INFO', `[ActionExecutor] Instruction sent to ${workerId}: ${instruction.slice(0, 100)}...`);
       return true;
     } else {

@@ -8,7 +8,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import { systemMonitor } from './system-monitor.js';
 import { approvalQueue } from './approval-queue.js';
 import { nightCommander } from './night-commander.js';
-import { ptyManager } from './pty-manager.js';
+import { ptyClient } from './pty-client.js';
 import { getPendingTasks } from '../routes/tasks.js';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
@@ -123,7 +123,7 @@ class TelegramNotifier {
     this.bot.onText(/\/workers/, async (msg) => {
       if (msg.chat.id.toString() !== TELEGRAM_CHAT_ID) return;
 
-      const sessions = ptyManager.listAll();
+      const sessions = ptyClient.list();
       let text = '*👷 워커 현황*\n\n';
 
       if (sessions.length === 0) {

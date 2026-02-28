@@ -16,9 +16,7 @@ import { setupCoordinationNamespace } from './socket/coordination-handler.js';
 import { systemMonitor } from './services/system-monitor.js';
 import { claudeUsageMonitor } from './services/claude-usage-monitor.js';
 import { coordinationParser } from './services/coordination-parser.js';
-import { outputLogger } from './services/output-logger.js';
-import { sessionState } from './services/session-state.js';
-import { ptyManager } from './services/pty-manager.js';
+import { ptyClient } from './services/pty-client.js';
 import { telegramNotifier } from './services/telegram-notifier.js';
 
 const app = express();
@@ -33,6 +31,9 @@ app.use(cors());
 app.use(express.json());
 app.use('/api', apiRouter);
 app.use('/api/worker-status', workerStatusRouter);
+app.use('/api/night-commander', nightCommanderRouter);
+app.use('/api/tasks', tasksRouter);
+app.use('/api/policy', policyRouter);
 
 // Setup socket.io namespaces
 setupTerminalNamespace(io.of('/terminal'));
@@ -52,60 +53,39 @@ if (fs.existsSync(config.frontendDist)) {
   });
 }
 
-// --- Auto-recovery: restore previously running sessions ---
-function autoRecover() {
-  const toRecover = sessionState.loadState();
-  if (toRecover.length > 0) {
-    console.log(`[Recovery] Restoring ${toRecover.length} previously running sessions...`);
-    for (const sess of toRecover) {
-      try {
-        if (!fs.existsSync(sess.cwd)) {
-          console.log(`[Recovery] Skipping "${sess.id}" - cwd missing: ${sess.cwd}`);
-          continue;
-        }
-        ptyManager.spawn(sess.id, sess.name, sess.cwd, sess.command);
-        console.log(`[Recovery] Restored "${sess.name}" (${sess.id})`);
-      } catch (err: any) {
-        console.error(`[Recovery] Failed "${sess.id}": ${err.message}`);
-      }
-    }
-  } else {
-    // First boot: check autoStart in sessions.json
-    try {
-      const configs = JSON.parse(fs.readFileSync(config.sessionsFile, 'utf-8'));
-      for (const cfg of configs) {
-        if (cfg.autoStart && fs.existsSync(cfg.cwd)) {
-          try {
-            ptyManager.spawn(cfg.id, cfg.name, cfg.cwd, cfg.command || 'claude');
-            console.log(`[AutoStart] Spawned "${cfg.name}"`);
-          } catch (err: any) {
-            console.error(`[AutoStart] Failed "${cfg.id}": ${err.message}`);
-          }
-        }
-      }
-    } catch { /* no sessions.json or parse error */ }
-  }
-}
-
 // --- Graceful shutdown ---
 function gracefulShutdown(signal: string) {
-  console.log(`\n[Shutdown] ${signal} received, saving state...`);
-  sessionState.shutdown();
-  outputLogger.shutdown();
+  console.log(`\n[Shutdown] ${signal} received`);
+  ptyClient.disconnect();
   process.exit(0);
 }
 
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
-httpServer.listen(config.port, config.host, () => {
-  console.log('');
-  console.log('  ╔══════════════════════════════════════════╗');
-  console.log('  ║   Lucas Command Center                   ║');
-  console.log(`  ║   http://localhost:${config.port}                  ║`);
-  console.log('  ║   Ready for session orchestration         ║');
-  console.log('  ╚══════════════════════════════════════════╝');
-  console.log('');
+// --- Start: connect to daemon then listen ---
+async function start() {
+  // Connect to PTY Daemon (auto-reconnects if daemon isn't up yet)
+  await ptyClient.connect();
 
-  autoRecover();
+  if (ptyClient.isConnected()) {
+    console.log(`[Server] Connected to PTY Daemon at ${config.daemonHost}:${config.daemonPort}`);
+  } else {
+    console.log(`[Server] PTY Daemon not available — will auto-reconnect when it starts`);
+  }
+
+  httpServer.listen(config.port, config.host, () => {
+    console.log('');
+    console.log('  ╔══════════════════════════════════════════╗');
+    console.log('  ║   Lucas Command Center                   ║');
+    console.log(`  ║   http://localhost:${config.port}                  ║`);
+    console.log('  ║   Ready for session orchestration         ║');
+    console.log('  ╚══════════════════════════════════════════╝');
+    console.log('');
+  });
+}
+
+start().catch((err) => {
+  console.error('[Server] Failed to start:', err);
+  process.exit(1);
 });

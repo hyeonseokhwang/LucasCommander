@@ -18,6 +18,10 @@ export const config = {
   runtimeStateFile: path.join(__dirname, '..', 'data', 'runtime-state.json'),
   ringBufferMaxBytes: 256 * 1024, // 256KB per session
 
+  // PTY Daemon
+  daemonPort: parseInt(process.env.DAEMON_PORT || '9100'),
+  daemonHost: '127.0.0.1',
+
   // Worker pool
   maxWorkers: 12,
   agentsDir: 'G:\\Lucas-Initiative\\agents',

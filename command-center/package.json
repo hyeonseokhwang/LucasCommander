@@ -4,6 +4,7 @@
   "description": "Lucas Initiative - Claude Code Session Orchestration Platform",
   "type": "module",
   "scripts": {
+    "daemon": "tsx server/daemon/index.ts",
     "dev": "tsx watch server/index.ts",
     "build": "cd frontend && npm run build",
     "start": "node --loader tsx server/index.ts",

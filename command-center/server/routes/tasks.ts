@@ -2,7 +2,7 @@ import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config.js';
-import { ptyManager } from '../services/pty-manager.js';
+import { ptyClient } from '../services/pty-client.js';
 
 export const tasksRouter = Router();
 
@@ -242,10 +242,10 @@ tasksRouter.post('/:id/assign', (req, res) => {
     fs.writeFileSync(msgPath, fileContent, 'utf-8');
 
     // Inject ASCII notification into worker PTY
-    if (ptyManager.isRunning(workerId)) {
+    if (ptyClient.isRunning(workerId)) {
       const notification = `[COMMANDER INSTRUCTION] Read file: .coordination/inbox/${msgFile}`;
-      ptyManager.write(workerId, notification);
-      setTimeout(() => ptyManager.write(workerId, '\r'), 50);
+      ptyClient.write(workerId, notification);
+      setTimeout(() => ptyClient.write(workerId, '\r'), 50);
     }
   }
 
@@ -260,7 +260,7 @@ export function getIdleWorkers(): string[] {
     queue.tasks.filter(t => t.status === 'assigned' || t.status === 'in_progress').map(t => t.assignedTo)
   );
 
-  const active = ptyManager.list();
+  const active = ptyClient.list();
   return active
     .filter(s => s.id !== 'commander' && s.status === 'running' && !busyWorkers.has(s.id))
     .map(s => s.id);
@@ -308,10 +308,10 @@ export function assignTaskInternal(taskId: string, workerId: string): Task | nul
   const msgPath = path.join(inboxDir, msgFile);
   fs.writeFileSync(msgPath, `# Instruction from Commander\n> ${now}\n> To: ${workerId}\n\n${instruction}`, 'utf-8');
 
-  if (ptyManager.isRunning(workerId)) {
+  if (ptyClient.isRunning(workerId)) {
     const notification = `[COMMANDER INSTRUCTION] Read file: .coordination/inbox/${msgFile}`;
-    ptyManager.write(workerId, notification);
-    setTimeout(() => ptyManager.write(workerId, '\r'), 50);
+    ptyClient.write(workerId, notification);
+    setTimeout(() => ptyClient.write(workerId, '\r'), 50);
   }
 
   return task;

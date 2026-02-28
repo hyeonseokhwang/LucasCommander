@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { config } from '../config.js';
 import { workerLifecycle } from './worker-lifecycle.js';
-import { ptyManager } from './pty-manager.js';
+import { ptyClient } from './pty-client.js';
 import type { Namespace } from 'socket.io';
 
 export interface WorkerRequest {
@@ -88,10 +88,10 @@ class ApprovalQueue {
 
       // Notify Commander via PTY
       const commanderId = 'commander';
-      if (ptyManager.isRunning(commanderId)) {
+      if (ptyClient.isRunning(commanderId)) {
         const msg = `[WORKER CLEANUP APPROVED] Workers deleted: ${deletedWorkers.join(', ')}.`;
-        ptyManager.write(commanderId, msg);
-        setTimeout(() => ptyManager.write(commanderId, '\r'), 50);
+        ptyClient.write(commanderId, msg);
+        setTimeout(() => ptyClient.write(commanderId, '\r'), 50);
       }
 
       // Push to frontend
@@ -128,10 +128,10 @@ class ApprovalQueue {
 
     // Notify Commander via PTY
     const commanderId = 'commander';
-    if (ptyManager.isRunning(commanderId)) {
+    if (ptyClient.isRunning(commanderId)) {
       const msg = `[WORKER REQUEST APPROVED] Workers created: ${createdWorkers.join(', ')}. Missions assigned via inbox.`;
-      ptyManager.write(commanderId, msg);
-      setTimeout(() => ptyManager.write(commanderId, '\r'), 50);
+      ptyClient.write(commanderId, msg);
+      setTimeout(() => ptyClient.write(commanderId, '\r'), 50);
     }
 
     // Push to frontend
@@ -154,10 +154,10 @@ class ApprovalQueue {
 
     // Notify Commander via PTY
     const commanderId = 'commander';
-    if (ptyManager.isRunning(commanderId)) {
+    if (ptyClient.isRunning(commanderId)) {
       const msg = `[WORKER REQUEST DENIED] requestId: ${requestId}. User denied the request.`;
-      ptyManager.write(commanderId, msg);
-      setTimeout(() => ptyManager.write(commanderId, '\r'), 50);
+      ptyClient.write(commanderId, msg);
+      setTimeout(() => ptyClient.write(commanderId, '\r'), 50);
     }
 
     if (this.coordinationNsp) {

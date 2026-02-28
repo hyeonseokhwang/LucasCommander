@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { config } from '../config.js';
-import { ptyManager } from './pty-manager.js';
+import { ptyClient } from './pty-client.js';
 
 export interface WorkerCreateOptions {
   mission?: string;
@@ -138,7 +138,7 @@ class WorkerLifecycle {
     let spawned = false;
     if (options.autoSpawn) {
       try {
-        ptyManager.spawn(id, name, cwd, 'claude');
+        await ptyClient.spawn(id, name, cwd, 'claude');
         spawned = true;
       } catch (err: any) {
         console.error(`[WorkerLifecycle] Failed to auto-spawn ${id}: ${err.message}`);
@@ -170,8 +170,8 @@ class WorkerLifecycle {
     if (idx === -1) throw new Error(`Worker "${id}" not found`);
 
     // Kill if running — wait for process to fully release file locks (Windows)
-    if (ptyManager.isRunning(id)) {
-      ptyManager.kill(id);
+    if (ptyClient.isRunning(id)) {
+      await ptyClient.kill(id);
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
@@ -219,7 +219,7 @@ class WorkerLifecycle {
 
   list(): Array<SessionConfig & { running: boolean; pid?: number }> {
     const configs = this.loadConfigs();
-    const active = ptyManager.list();
+    const active = ptyClient.list();
     const activeMap = new Map(active.map(a => [a.id, a]));
 
     return configs
