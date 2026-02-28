@@ -11,6 +11,9 @@ import { setupMonitorNamespace } from './socket/monitor-handler.js';
 import { setupCoordinationNamespace } from './socket/coordination-handler.js';
 import { systemMonitor } from './services/system-monitor.js';
 import { coordinationParser } from './services/coordination-parser.js';
+import { outputLogger } from './services/output-logger.js';
+import { sessionState } from './services/session-state.js';
+import { ptyManager } from './services/pty-manager.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -41,6 +44,52 @@ if (fs.existsSync(config.frontendDist)) {
   });
 }
 
+// --- Auto-recovery: restore previously running sessions ---
+function autoRecover() {
+  const toRecover = sessionState.loadState();
+  if (toRecover.length > 0) {
+    console.log(`[Recovery] Restoring ${toRecover.length} previously running sessions...`);
+    for (const sess of toRecover) {
+      try {
+        if (!fs.existsSync(sess.cwd)) {
+          console.log(`[Recovery] Skipping "${sess.id}" - cwd missing: ${sess.cwd}`);
+          continue;
+        }
+        ptyManager.spawn(sess.id, sess.name, sess.cwd, sess.command);
+        console.log(`[Recovery] Restored "${sess.name}" (${sess.id})`);
+      } catch (err: any) {
+        console.error(`[Recovery] Failed "${sess.id}": ${err.message}`);
+      }
+    }
+  } else {
+    // First boot: check autoStart in sessions.json
+    try {
+      const configs = JSON.parse(fs.readFileSync(config.sessionsFile, 'utf-8'));
+      for (const cfg of configs) {
+        if (cfg.autoStart && fs.existsSync(cfg.cwd)) {
+          try {
+            ptyManager.spawn(cfg.id, cfg.name, cfg.cwd, cfg.command || 'claude');
+            console.log(`[AutoStart] Spawned "${cfg.name}"`);
+          } catch (err: any) {
+            console.error(`[AutoStart] Failed "${cfg.id}": ${err.message}`);
+          }
+        }
+      }
+    } catch { /* no sessions.json or parse error */ }
+  }
+}
+
+// --- Graceful shutdown ---
+function gracefulShutdown(signal: string) {
+  console.log(`\n[Shutdown] ${signal} received, saving state...`);
+  sessionState.shutdown();
+  outputLogger.shutdown();
+  process.exit(0);
+}
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
 httpServer.listen(config.port, config.host, () => {
   console.log('');
   console.log('  ╔══════════════════════════════════════════╗');
@@ -49,4 +98,6 @@ httpServer.listen(config.port, config.host, () => {
   console.log('  ║   Ready for session orchestration         ║');
   console.log('  ╚══════════════════════════════════════════╝');
   console.log('');
+
+  autoRecover();
 });

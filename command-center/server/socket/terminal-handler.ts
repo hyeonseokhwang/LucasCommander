@@ -1,5 +1,6 @@
 import type { Namespace, Socket } from 'socket.io';
 import { ptyManager } from '../services/pty-manager.js';
+import { outputLogger } from '../services/output-logger.js';
 
 export function setupTerminalNamespace(nsp: Namespace) {
   nsp.on('connection', (socket: Socket) => {
@@ -7,7 +8,12 @@ export function setupTerminalNamespace(nsp: Namespace) {
 
     const cleanups: Array<{ dispose: () => void }> = [];
 
-    socket.on('attach', (sessionId: string) => {
+    socket.on('attach', (payload: string | { sessionId: string; requestReplay?: boolean; cols?: number; rows?: number }) => {
+      const sessionId = typeof payload === 'string' ? payload : payload.sessionId;
+      const requestReplay = typeof payload === 'object' ? payload.requestReplay ?? true : false;
+      const cols = typeof payload === 'object' ? payload.cols : undefined;
+      const rows = typeof payload === 'object' ? payload.rows : undefined;
+
       const session = ptyManager.get(sessionId);
       if (!session) {
         socket.emit('error', { message: `Session "${sessionId}" not found` });
@@ -15,9 +21,29 @@ export function setupTerminalNamespace(nsp: Namespace) {
       }
 
       socket.join(`term:${sessionId}`);
-      console.log(`[Terminal] ${socket.id} attached to session "${sessionId}"`);
+      console.log(`[Terminal] ${socket.id} attached to session "${sessionId}" (replay: ${requestReplay})`);
 
-      // Pipe PTY output -> browser
+      // Resize PTY to match client terminal before replay
+      if (cols && rows) {
+        ptyManager.resize(sessionId, cols, rows);
+      }
+
+      // Send buffered output BEFORE registering live listener
+      if (requestReplay) {
+        const buffered = outputLogger.getBuffer(sessionId);
+        if (buffered.length > 0) {
+          const CHUNK = 64 * 1024;
+          if (buffered.length <= CHUNK) {
+            socket.emit('replay', { sessionId, data: buffered });
+          } else {
+            for (let i = 0; i < buffered.length; i += CHUNK) {
+              socket.emit('replay', { sessionId, data: buffered.slice(i, i + CHUNK) });
+            }
+          }
+        }
+      }
+
+      // Pipe PTY output -> browser (live, going forward)
       const onData = session.pty.onData((data: string) => {
         nsp.to(`term:${sessionId}`).emit('output', { sessionId, data });
       });

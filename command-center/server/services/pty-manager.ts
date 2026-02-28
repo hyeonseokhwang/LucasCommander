@@ -1,5 +1,7 @@
 import os from 'os';
 import * as pty from 'node-pty';
+import { outputLogger } from './output-logger.js';
+import { sessionState } from './session-state.js';
 
 export interface TerminalSession {
   id: string;
@@ -68,6 +70,30 @@ class PtyManager {
     };
 
     this.sessions.set(id, session);
+
+    // Output logging — buffer in memory + write to file
+    outputLogger.startSession(id);
+    ptyProcess.onData((data: string) => {
+      outputLogger.write(id, data);
+    });
+
+    // Handle unexpected PTY exit
+    ptyProcess.onExit(({ exitCode }) => {
+      console.log(`[PTY] Session "${name}" (${id}) exited with code ${exitCode}`);
+      const sess = this.sessions.get(id);
+      if (sess) {
+        sess.status = 'stopped';
+        outputLogger.stopSession(id);
+        sessionState.sessionStopped(id);
+      }
+    });
+
+    // Persist running state
+    sessionState.sessionStarted({
+      id, name, cwd, command,
+      spawnedAt: new Date().toISOString(),
+    });
+
     console.log(`[PTY] Spawned session "${name}" (${id}) in ${cwd}, PID: ${ptyProcess.pid}`);
     return session;
   }
@@ -93,6 +119,16 @@ class PtyManager {
       session.pty.kill();
       session.status = 'stopped';
       this.sessions.delete(id);
+
+      outputLogger.stopSession(id);
+      sessionState.sessionStopped(id);
+
+      // Clear ring buffer after delay (in case of quick respawn)
+      setTimeout(() => {
+        if (!this.sessions.has(id)) {
+          outputLogger.clearBuffer(id);
+        }
+      }, 5000);
     }
   }
 

@@ -69,7 +69,19 @@ export function useTerminal({ sessionId, containerRef, fontSize = 14 }: UseTermi
 
     socket.on('connect', () => {
       setConnected(true);
-      socket.emit('attach', sessionId);
+      term.reset();
+      // Fit first, then attach with current dimensions so PTY can resize before replay
+      fitAddon.fit();
+      socket.emit('attach', {
+        sessionId,
+        requestReplay: true,
+        cols: term.cols,
+        rows: term.rows,
+      });
+    });
+
+    socket.on('replay', ({ data }: { sessionId: string; data: string }) => {
+      term.write(data);
     });
 
     socket.on('output', ({ data }: { sessionId: string; data: string }) => {

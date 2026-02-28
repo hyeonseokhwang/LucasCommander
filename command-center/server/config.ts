@@ -11,4 +11,10 @@ export const config = {
   frontendDist: path.join(__dirname, '..', 'frontend', 'dist'),
   monitorInterval: 3000,
   coordinationDebounce: 500,
+
+  // Persistence
+  dataDir: path.join(__dirname, '..', 'data'),
+  logsDir: path.join(__dirname, '..', 'data', 'logs'),
+  runtimeStateFile: path.join(__dirname, '..', 'data', 'runtime-state.json'),
+  ringBufferMaxBytes: 256 * 1024, // 256KB per session
 };

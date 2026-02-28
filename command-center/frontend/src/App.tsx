@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { TerminalGrid } from './components/TerminalGrid';
 import { SessionManager } from './components/SessionManager';
 import { SystemMonitor } from './components/SystemMonitor';
@@ -10,6 +10,18 @@ import { api } from './lib/api';
 export default function App() {
   const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // On mount: fetch already-running sessions (auto-recovered or previously spawned)
+  useEffect(() => {
+    api.sessions().then((configs: any[]) => {
+      const running = configs
+        .filter((c: any) => c.running)
+        .map((c: any) => ({ id: c.id, name: c.name, color: c.color }));
+      if (running.length > 0) {
+        setActiveSessions(running);
+      }
+    }).catch(() => {});
+  }, []);
 
   const handleSessionSpawned = useCallback((session: ActiveSession) => {
     setActiveSessions(prev => {
