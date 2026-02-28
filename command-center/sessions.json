@@ -1,0 +1,42 @@
+[
+  {
+    "id": "commander",
+    "name": "Commander",
+    "cwd": "G:\\Lucas-Initiative\\agents\\commander",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#f87171"
+  },
+  {
+    "id": "worker-1",
+    "name": "Worker-1",
+    "cwd": "G:\\Lucas-Initiative\\agents\\worker-1",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#60a5fa"
+  },
+  {
+    "id": "worker-2",
+    "name": "Worker-2",
+    "cwd": "G:\\Lucas-Initiative\\agents\\worker-2",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#34d399"
+  },
+  {
+    "id": "worker-3",
+    "name": "Worker-3",
+    "cwd": "G:\\Lucas-Initiative\\agents\\worker-3",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#facc15"
+  },
+  {
+    "id": "worker-4",
+    "name": "Worker-4",
+    "cwd": "G:\\Lucas-Initiative\\agents\\worker-4",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#c084fc"
+  }
+]

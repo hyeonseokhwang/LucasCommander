@@ -1,0 +1,25 @@
+{
+  "name": "lucas-command-center",
+  "version": "1.0.0",
+  "description": "Lucas Initiative - Claude Code Session Orchestration Platform",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch server/index.ts",
+    "build": "cd frontend && npm run build",
+    "start": "node --loader tsx server/index.ts",
+    "setup": "npm install && cd frontend && npm install"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "socket.io": "^4.8.0",
+    "node-pty": "^1.0.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.0.0"
+  }
+}
