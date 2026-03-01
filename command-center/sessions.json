@@ -40,16 +40,6 @@
     "color": "#c084fc"
   },
   {
-    "id": "worker-5",
-    "name": "Worker-5",
-    "cwd": "G:\\Lucas-Initiative\\agents\\worker-5",
-    "command": "claude",
-    "autoStart": false,
-    "color": "#fb923c",
-    "type": "dynamic",
-    "createdAt": "2026-02-28T12:57:57.135Z"
-  },
-  {
     "id": "worker-6",
     "name": "Worker-6",
     "cwd": "G:\\Lucas-Initiative\\agents\\worker-6",
@@ -57,8 +47,9 @@
     "autoStart": false,
     "color": "#f472b6",
     "type": "dynamic",
-    "mission": "루카스 이니셔티브 홈페이지 작성",
-    "createdAt": "2026-02-28T13:51:09.006Z"
+    "mission": "Dashboard 주식 데이터 수집/분석 코드 분석 후 보강 - 포트폴리오 뷰, 실시간 차트, 섹터별 분류. 경로: G:/LucasDashboard/",
+    "targetProject": "dashboard+command-center",
+    "createdAt": "2026-02-28T15:34:53.680Z"
   },
   {
     "id": "worker-7",
@@ -68,8 +59,9 @@
     "autoStart": false,
     "color": "#2dd4bf",
     "type": "dynamic",
-    "mission": "대화창",
-    "createdAt": "2026-02-28T14:06:00.771Z"
+    "mission": "Dashboard 부동산 데이터 수집/분석 코드 분석 후 보강 - 시세 트렌드, 지역별 비교, 관심 매물 추적. 경로: G:/LucasDashboard/",
+    "targetProject": "dashboard+command-center",
+    "createdAt": "2026-02-28T15:34:53.818Z"
   },
   {
     "id": "worker-8",
@@ -79,8 +71,20 @@
     "autoStart": false,
     "color": "#a78bfa",
     "type": "dynamic",
-    "mission": "Research on Gwanjajae Korean Medicine Clinic - comprehensive investigation",
-    "targetProject": "research",
-    "createdAt": "2026-02-28T14:25:33.979Z"
+    "mission": "Dashboard 데이터 시각화 전체 개선 - 일목요연한 UI, 정보 밀도 향상, 차트/그래프 고도화. 경로: G:/LucasDashboard/",
+    "targetProject": "dashboard+command-center",
+    "createdAt": "2026-02-28T15:34:53.970Z"
+  },
+  {
+    "id": "worker-10",
+    "name": "Worker-10",
+    "cwd": "G:\\Lucas-Initiative\\agents\\worker-10",
+    "command": "claude",
+    "autoStart": false,
+    "color": "#38bdf8",
+    "type": "dynamic",
+    "mission": "Command Center 프론트엔드에 자율 사령관 대시보드 추가 - 태스크 큐 뷰, 판단 로그, 정책 편집기",
+    "targetProject": "command-center",
+    "createdAt": "2026-02-28T15:38:10.330Z"
   }
 ]

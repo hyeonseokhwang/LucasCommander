@@ -30,5 +30,127 @@
     "createdWorkers": [
       "worker-8"
     ]
+  },
+  {
+    "type": "cleanup",
+    "reason": "Worker worker-5 task complete - CC dashboard done",
+    "count": 1,
+    "missions": [
+      "worker-5"
+    ],
+    "requestId": "wr-1772291027092",
+    "status": "approved",
+    "requestedAt": "2026-02-28T15:03:47.092Z",
+    "resolvedAt": "2026-02-28T15:06:03.479Z",
+    "createdWorkers": []
+  },
+  {
+    "type": "cleanup",
+    "reason": "Worker worker-6 task complete - homepage done",
+    "count": 1,
+    "missions": [
+      "worker-6"
+    ],
+    "requestId": "wr-1772291028594",
+    "status": "approved",
+    "requestedAt": "2026-02-28T15:03:48.594Z",
+    "resolvedAt": "2026-02-28T15:07:18.817Z",
+    "createdWorkers": []
+  },
+  {
+    "type": "cleanup",
+    "reason": "Worker worker-7 never started - no mission",
+    "count": 1,
+    "missions": [
+      "worker-7"
+    ],
+    "requestId": "wr-1772291029207",
+    "status": "approved",
+    "requestedAt": "2026-02-28T15:03:49.207Z",
+    "resolvedAt": "2026-02-28T15:07:19.081Z",
+    "createdWorkers": []
+  },
+  {
+    "type": "cleanup",
+    "reason": "Worker worker-8 stopped - research suspended",
+    "count": 1,
+    "missions": [
+      "worker-8"
+    ],
+    "requestId": "wr-1772291030391",
+    "status": "approved",
+    "requestedAt": "2026-02-28T15:03:50.391Z",
+    "resolvedAt": "2026-02-28T15:07:19.336Z",
+    "createdWorkers": []
+  },
+  {
+    "type": "cleanup",
+    "reason": "Worker worker-6 task complete, requesting cleanup",
+    "count": 1,
+    "missions": [
+      "worker-6"
+    ],
+    "requestId": "wr-1772291306047",
+    "status": "approved",
+    "requestedAt": "2026-02-28T15:08:26.047Z",
+    "resolvedAt": "2026-02-28T15:08:29.586Z",
+    "createdWorkers": []
+  },
+  {
+    "type": "cleanup",
+    "reason": "Worker worker-7 task complete, requesting cleanup",
+    "count": 1,
+    "missions": [
+      "worker-7"
+    ],
+    "requestId": "wr-1772291307058",
+    "status": "approved",
+    "requestedAt": "2026-02-28T15:08:27.058Z",
+    "resolvedAt": "2026-02-28T15:08:30.224Z",
+    "createdWorkers": []
+  },
+  {
+    "type": "cleanup",
+    "reason": "Worker worker-8 task complete, requesting cleanup",
+    "count": 1,
+    "missions": [
+      "worker-8"
+    ],
+    "requestId": "wr-1772291308106",
+    "status": "approved",
+    "requestedAt": "2026-02-28T15:08:28.106Z",
+    "resolvedAt": "2026-02-28T15:08:31.312Z",
+    "createdWorkers": []
+  },
+  {
+    "type": "create",
+    "reason": "Need 4 workers for parallel dashboard enhancement + autonomous commander frontend",
+    "count": 4,
+    "missions": [
+      "Dashboard 주식 데이터 수집/분석 코드 분석 후 보강 - 포트폴리오 뷰, 실시간 차트, 섹터별 분류. 경로: G:/LucasDashboard/",
+      "Dashboard 부동산 데이터 수집/분석 코드 분석 후 보강 - 시세 트렌드, 지역별 비교, 관심 매물 추적. 경로: G:/LucasDashboard/",
+      "Dashboard 데이터 시각화 전체 개선 - 일목요연한 UI, 정보 밀도 향상, 차트/그래프 고도화. 경로: G:/LucasDashboard/",
+      "Command Center 프론트엔드에 자율 사령관 대시보드 추가 - 태스크 큐 뷰, 판단 로그, 정책 편집기. 경로: G:/Lucas-Initiative/command-center/"
+    ],
+    "targetProject": "dashboard+command-center",
+    "requestId": "wr-1772292891549",
+    "status": "denied",
+    "requestedAt": "2026-02-28T15:34:51.549Z",
+    "resolvedAt": "2026-02-28T15:37:20.459Z"
+  },
+  {
+    "type": "cleanup",
+    "reason": "Worker worker-9 task complete - mission duplicates worker-6 (stock data). Cleaning up.",
+    "count": 1,
+    "missions": [
+      "worker-9"
+    ],
+    "requestId": "wr-1772293262561",
+    "status": "approved",
+    "requestedAt": "2026-02-28T15:41:02.561Z",
+    "resolvedAt": "2026-02-28T15:41:05.352Z",
+    "createdWorkers": [
+      "worker-9"
+    ]
   }
 ]

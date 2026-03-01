@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "savedAt": "2026-02-28T14:25:35.199Z",
+  "savedAt": "2026-02-28T15:43:05.584Z",
   "sessions": [
     {
       "id": "commander",
       "name": "Commander",
       "cwd": "G:\\Lucas-Initiative\\agents\\commander",
       "command": "claude",
-      "spawnedAt": "2026-02-28T14:25:34.699Z",
+      "spawnedAt": "2026-02-28T15:43:05.057Z",
       "status": "running"
     },
     {
@@ -15,7 +15,7 @@
       "name": "Worker-1",
       "cwd": "G:\\Lucas-Initiative\\agents\\worker-1",
       "command": "claude",
-      "spawnedAt": "2026-02-28T14:25:34.770Z",
+      "spawnedAt": "2026-02-28T15:43:05.123Z",
       "status": "running"
     },
     {
@@ -23,7 +23,7 @@
       "name": "Worker-2",
       "cwd": "G:\\Lucas-Initiative\\agents\\worker-2",
       "command": "claude",
-      "spawnedAt": "2026-02-28T14:25:34.838Z",
+      "spawnedAt": "2026-02-28T15:43:05.190Z",
       "status": "running"
     },
     {
@@ -31,7 +31,7 @@
       "name": "Worker-3",
       "cwd": "G:\\Lucas-Initiative\\agents\\worker-3",
       "command": "claude",
-      "spawnedAt": "2026-02-28T14:25:34.906Z",
+      "spawnedAt": "2026-02-28T15:43:05.256Z",
       "status": "running"
     },
     {
@@ -39,15 +39,7 @@
       "name": "Worker-4",
       "cwd": "G:\\Lucas-Initiative\\agents\\worker-4",
       "command": "claude",
-      "spawnedAt": "2026-02-28T14:25:34.975Z",
-      "status": "running"
-    },
-    {
-      "id": "worker-5",
-      "name": "Worker-5",
-      "cwd": "G:\\Lucas-Initiative\\agents\\worker-5",
-      "command": "claude",
-      "spawnedAt": "2026-02-28T14:25:35.046Z",
+      "spawnedAt": "2026-02-28T15:43:05.323Z",
       "status": "running"
     },
     {
@@ -55,7 +47,7 @@
       "name": "Worker-6",
       "cwd": "G:\\Lucas-Initiative\\agents\\worker-6",
       "command": "claude",
-      "spawnedAt": "2026-02-28T14:25:35.114Z",
+      "spawnedAt": "2026-02-28T15:43:05.388Z",
       "status": "running"
     },
     {
@@ -63,7 +55,23 @@
       "name": "Worker-7",
       "cwd": "G:\\Lucas-Initiative\\agents\\worker-7",
       "command": "claude",
-      "spawnedAt": "2026-02-28T14:25:35.187Z",
+      "spawnedAt": "2026-02-28T15:43:05.453Z",
+      "status": "running"
+    },
+    {
+      "id": "worker-8",
+      "name": "Worker-8",
+      "cwd": "G:\\Lucas-Initiative\\agents\\worker-8",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T15:43:05.518Z",
+      "status": "running"
+    },
+    {
+      "id": "worker-10",
+      "name": "Worker-10",
+      "cwd": "G:\\Lucas-Initiative\\agents\\worker-10",
+      "command": "claude",
+      "spawnedAt": "2026-02-28T15:43:05.583Z",
       "status": "running"
     }
   ]
